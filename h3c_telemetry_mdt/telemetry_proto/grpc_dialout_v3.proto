@@ -1,0 +1,13 @@
+syntax = "proto3";
+package grpc_dialout_v3;
+option go_package="./;telemetry";
+message DialoutV3Args{
+    int64 ReqId = 1;//请求ID
+    bytes data = 2;//承载的数据
+    string errors = 3;//产生错误时的描述信息
+    int32 totalSize = 4;// 分片时信息的总大小，未分片时为0
+}
+service gRPCDialoutV3{
+    rpc DialoutV3(stream DialoutV3Args) returns (stream DialoutV3Args) {};
+    //方法为DialoutV3，双向流模式，提供数据推送的方法，入参是DialoutV3Args数据流。
+}
