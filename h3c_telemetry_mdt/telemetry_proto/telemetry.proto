@@ -1,0 +1,31 @@
+syntax = "proto3";
+package telemetry;
+option go_package="./;telemetry";
+message Telemetry {
+    string producer_name = 1;       //厂商名
+    string node_id_str = 2;         //设备名称
+    string product_name = 3;        //产品名称
+    string subscription_id_str = 15;//订阅名
+    string sensor_path = 16;        //采样路径
+    uint64 collection_id = 17;      //标识采样轮次
+    uint64 collection_start_time = 18;//采样开始时间
+    uint64 msg_timestamp = 19;       //生成本消息时间戳
+    uint64 collection_end_time = 20; //采样结束时间
+    uint32 current_period = 21;      //采样精度
+    string except_desc = 22;         //异常描述信息
+    enum Encoding {
+        Encoding_JSON = 0;          //JSON数据编码格式
+        Encoding_GPB = 1;           //GPB数据编码格式
+        };
+    Encoding encoding = 23;         //数据编码格式
+    string data_str = 24;           //数据编码非GPB时有效，否则为空
+    TelemetryGPBTable data_gpb = 25; //承载的数据由TelemetryGPBTable定义   
+}
+message TelemetryGPBTable {
+    repeated TelemetryRowGPB row = 1; //数组定义，标识数据是TelemetryRowGPB结构的重复
+}
+message TelemetryRowGPB {
+    uint64 timestamp = 1;            //采样当前实例的时间戳
+    bytes keys = 10;                 //保留字段
+    bytes content = 11;              //承载的采样实例数据
+}
