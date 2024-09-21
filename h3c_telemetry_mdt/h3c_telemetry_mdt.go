@@ -15,11 +15,11 @@ import (
 	"sync"
 	"time"
 
+	telemetry "github.com/infinitefeith/telegraf-h3c-plugin/h3c_telemetry_mdt/telemetry_proto"
 	"github.com/influxdata/telegraf"
 	"github.com/influxdata/telegraf/metric"
 	internaltls "github.com/influxdata/telegraf/plugins/common/tls"
 	"github.com/influxdata/telegraf/plugins/inputs"
-	telemetry "github.com/influxdata/telegraf/plugins/inputs/h3c_telemetry_mdt/telemetry_proto"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials" // Register GRPC gzip decoder to support compressed telemetry
 	_ "google.golang.org/grpc/encoding/gzip"
@@ -219,7 +219,7 @@ func (c *H3cTelemetryMDT) DialoutV3(stream telemetry.GRPCDialoutV3_DialoutV3Serv
 		// grpc data
 		if len(packet.GetData()) != 0 {
 			// c.Log.Debugf("D! GRPC dialout data: %s", hex.EncodeToString(packet.GetData()))
-			metrics, errParse = c.Parse(packet.GetData())
+			metrics, errParse = c.HandleTelemetry(packet.GetData())
 			if errParse != nil {
 				c.acc.AddError(errParse)
 				c.stop()
@@ -236,7 +236,7 @@ func (c *H3cTelemetryMDT) DialoutV3(stream telemetry.GRPCDialoutV3_DialoutV3Serv
 	return nil
 }
 
-func (c *H3cTelemetryMDT) Parse(buf []byte) ([]telegraf.Metric, error) {
+func (c *H3cTelemetryMDT) HandleTelemetry(buf []byte) ([]telegraf.Metric, error) {
 	msg := &telemetry.Telemetry{}
 	errParse := proto.Unmarshal(buf, msg)
 	if errParse != nil {
@@ -374,14 +374,14 @@ func (c *H3cTelemetryMDT) flattenProtoMsg(telemetryHeader map[string]interface{}
 		}
 		metric := metric.New(telemetryHeader[SensorPathKey].(string), nil, fields, tm)
 		// if err != nil {
-		// return nil, err
+		// 	return nil, err
 		// }
 		// debug start
-		//c.Log.Debugf("D! -------------------------------------Fields START time is %v-----------------------------------------\n", metric.Time())
-		//for k, v := range metric.Fields() {
+		// c.Log.Debugf("D! -------------------------------------Fields START time is %v-----------------------------------------\n", metric.Time())
+		// for k, v := range metric.Fields() {
 		//    c.Log.Debugf("k: %s, v: %v ", k, v)
-		//}
-		//c.Log.Debugf("D! ------------------------------------- Fields END -----------------------------------------\n")
+		// }
+		// c.Log.Debugf("D! ------------------------------------- Fields END -----------------------------------------\n")
 		// debug end
 
 		metrics = append(metrics, metric)
